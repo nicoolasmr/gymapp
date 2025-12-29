@@ -34,6 +34,7 @@ export default function HomeScreen() {
     const [loading, setLoading] = useState(true);
     const [activeCategory, setActiveCategory] = useState('all');
     const [onboardingState, setOnboardingState] = useState<any>(null);
+    const [level, setLevel] = useState<any>(null);
     const router = useRouter();
 
     const [pendingCheckin, setPendingCheckin] = useState<any>(null);
@@ -49,6 +50,13 @@ export default function HomeScreen() {
 
             if (onboardingError) console.log('Onboarding fetch error:', onboardingError);
             if (onboardingData) setOnboardingState(onboardingData);
+
+            // Fetch user level (Gamification)
+            const { data: levelData, error: levelError } = await supabase
+                .rpc('get_user_level_progress', { p_user_id: user.id });
+
+            if (levelError) console.log('Level fetch error:', levelError);
+            if (levelData) setLevel(levelData);
 
             // Fetch membership
             const { data: membershipData, error: membershipError } = await supabase
@@ -133,7 +141,14 @@ export default function HomeScreen() {
                         />
                         <View>
                             <Text style={styles.greeting}>Olá, {user?.user_metadata?.full_name?.split(' ')[0] || 'Atleta'}</Text>
-                            <Text style={styles.subtitle}>Vamos treinar?</Text>
+                            {level ? (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, backgroundColor: '#fefce8', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, borderWidth: 1, borderColor: '#fef08a' }}>
+                                    <Ionicons name="trophy" size={12} color="#ca8a04" />
+                                    <Text style={{ fontSize: 12, color: '#854d0e', fontWeight: '600' }}>{level.level_name} • {level.current_xp} XP</Text>
+                                </View>
+                            ) : (
+                                <Text style={styles.subtitle}>Vamos treinar?</Text>
+                            )}
                         </View>
                     </TouchableOpacity>
 
