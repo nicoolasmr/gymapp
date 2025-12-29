@@ -178,19 +178,19 @@ export default function BoostsPage() {
                             <div
                                 key={boost.type}
                                 className={`bg-white rounded-xl border-2 p-6 transition-all ${isActive
-                                        ? 'border-green-300 bg-green-50'
-                                        : 'border-gray-200 hover:border-blue-300 hover:shadow-lg'
+                                    ? 'border-green-300 bg-green-50'
+                                    : 'border-gray-200 hover:border-blue-300 hover:shadow-lg'
                                     }`}
                             >
                                 <div className={`p-3 rounded-lg inline-block mb-4 ${boost.color === 'blue' ? 'bg-blue-100' :
-                                        boost.color === 'purple' ? 'bg-purple-100' :
-                                            boost.color === 'yellow' ? 'bg-yellow-100' :
-                                                'bg-green-100'
+                                    boost.color === 'purple' ? 'bg-purple-100' :
+                                        boost.color === 'yellow' ? 'bg-yellow-100' :
+                                            'bg-green-100'
                                     }`}>
                                     <Icon className={`w-6 h-6 ${boost.color === 'blue' ? 'text-blue-600' :
-                                            boost.color === 'purple' ? 'text-purple-600' :
-                                                boost.color === 'yellow' ? 'text-yellow-600' :
-                                                    'text-green-600'
+                                        boost.color === 'purple' ? 'text-purple-600' :
+                                            boost.color === 'yellow' ? 'text-yellow-600' :
+                                                'text-green-600'
                                         }`} />
                                 </div>
 
@@ -208,8 +208,8 @@ export default function BoostsPage() {
                                     onClick={() => handlePurchaseBoost(boost.type, boost.price)}
                                     disabled={isActive}
                                     className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${isActive
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'bg-blue-600 text-white hover:bg-blue-700'
                                         }`}
                                 >
                                     {isActive ? 'Boost Ativo' : 'Ativar Boost'}
@@ -230,7 +230,7 @@ export default function BoostsPage() {
                     </li>
                     <li className="flex items-start gap-2">
                         <span className="text-blue-600 mt-1">✓</span>
-                        <span>Badge "Academia Destaque" no seu perfil</span>
+                        <span>Badge &quot;Academia Destaque&quot; no seu perfil</span>
                     </li>
                     <li className="flex items-start gap-2">
                         <span className="text-blue-600 mt-1">✓</span>
