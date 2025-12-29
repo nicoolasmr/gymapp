@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fitness-app-web
+  namespace: default
+  labels:
+    app: fitness-app-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fitness-app-web
+  template:
+    metadata:
+      labels:
+        app: fitness-app-web
+    spec:
+      containers:
+      - name: fitness-app-web
+        image: antigravaty/fitness-app-web:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fitness-app-web-service
+  namespace: default
+spec:
+  selector:
+    app: fitness-app-web
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP

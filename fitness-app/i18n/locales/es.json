@@ -1,0 +1,94 @@
+{
+    "common": {
+        "loading": "Cargando...",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "search": "Buscar",
+        "filter": "Filtrar",
+        "close": "Cerrar",
+        "back": "Volver",
+        "next": "Siguiente",
+        "finish": "Finalizar",
+        "refresh": "Actualizar"
+    },
+    "home": {
+        "greeting": "Hola",
+        "membership": "Mi Membresía",
+        "nearbyAcademies": "Academias Cercanas",
+        "categories": "Categorías",
+        "all": "Todas"
+    },
+    "benefits": {
+        "title": "Marketplace",
+        "subtitle": "Beneficios exclusivos para ti",
+        "search": "Buscar beneficios...",
+        "categories": {
+            "all": "Todos",
+            "supplements": "Suplementos",
+            "clothing": "Ropa",
+            "food": "Alimentación",
+            "wellness": "Bienestar",
+            "recovery": "Recuperación",
+            "personalCare": "Cuidado Personal"
+        },
+        "discount": "Descuento",
+        "coupon": "Cupón",
+        "activate": "Activar Beneficio",
+        "premiumOnly": "Beneficio Premium",
+        "premiumMessage": "Este beneficio está disponible solo para usuarios Premium. ¿Deseas actualizar?"
+    },
+    "missions": {
+        "title": "Misiones Semanales",
+        "subtitle": "¡Completa desafíos y gana recompensas!",
+        "active": "Misiones Activas",
+        "completed": "Misiones Completadas",
+        "claim": "Reclamar Recompensa",
+        "expires": "Expira en",
+        "reward": "Recompensa",
+        "howItWorks": "¿Cómo funciona?",
+        "info": "• Las misiones se renuevan cada semana\n• Completa desafíos para ganar recompensas\n• Reclama tus recompensas antes de que expiren\n• ¡Cuanto más entrenas, mejores recompensas!"
+    },
+    "premium": {
+        "title": "Desbloquea Todo\ntu Potencial",
+        "subtitle": "Lleva tus entrenamientos al siguiente nivel con funciones exclusivas",
+        "monthly": "Mensual",
+        "yearly": "Anual",
+        "perMonth": "por mes",
+        "perYear": "por año",
+        "savings": "Ahorra 17%",
+        "features": "Lo que obtienes:",
+        "startTrial": "Comenzar Prueba Gratis",
+        "trialInfo": "7 días gratis, después",
+        "terms": "Al continuar, aceptas nuestros Términos de Uso",
+        "benefits": {
+            "unlimited": "Check-ins Ilimitados",
+            "badges": "Insignias Exclusivas",
+            "stats": "Estadísticas Avanzadas",
+            "ranking": "Ranking Global",
+            "missions": "Misiones Semanales Bonus",
+            "invites": "Invitaciones Especiales",
+            "marketplace": "Marketplace Premium",
+            "noAds": "Sin Anuncios"
+        }
+    },
+    "points": {
+        "title": "Puntos Premium",
+        "subtitle": "¡Intercambia tus puntos por recompensas increíbles!",
+        "yourPoints": "Tus Puntos",
+        "totalEarned": "Total acumulado",
+        "howToEarn": "Cómo Ganar Puntos",
+        "rewards": "Recompensas Disponibles",
+        "locked": "Bloqueado",
+        "info": "¡Los puntos nunca expiran! Sigue entrenando y acumulando para canjear recompensas aún mejores."
+    },
+    "profile": {
+        "title": "Mi Perfil",
+        "progress": "Mi Progreso",
+        "streak": "Racha",
+        "badges": "Insignias",
+        "stats": "Estadísticas",
+        "settings": "Configuración"
+    }
+}

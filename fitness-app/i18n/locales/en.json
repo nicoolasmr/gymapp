@@ -1,0 +1,94 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "search": "Search",
+        "filter": "Filter",
+        "close": "Close",
+        "back": "Back",
+        "next": "Next",
+        "finish": "Finish",
+        "refresh": "Refresh"
+    },
+    "home": {
+        "greeting": "Hello",
+        "membership": "My Membership",
+        "nearbyAcademies": "Nearby Academies",
+        "categories": "Categories",
+        "all": "All"
+    },
+    "benefits": {
+        "title": "Marketplace",
+        "subtitle": "Exclusive benefits for you",
+        "search": "Search benefits...",
+        "categories": {
+            "all": "All",
+            "supplements": "Supplements",
+            "clothing": "Clothing",
+            "food": "Food",
+            "wellness": "Wellness",
+            "recovery": "Recovery",
+            "personalCare": "Personal Care"
+        },
+        "discount": "Discount",
+        "coupon": "Coupon",
+        "activate": "Activate Benefit",
+        "premiumOnly": "Premium Benefit",
+        "premiumMessage": "This benefit is available only for Premium users. Would you like to upgrade?"
+    },
+    "missions": {
+        "title": "Weekly Missions",
+        "subtitle": "Complete challenges and earn rewards!",
+        "active": "Active Missions",
+        "completed": "Completed Missions",
+        "claim": "Claim Reward",
+        "expires": "Expires in",
+        "reward": "Reward",
+        "howItWorks": "How it works?",
+        "info": "• Missions are renewed every week\n• Complete challenges to earn rewards\n• Claim your rewards before they expire\n• The more you train, the better the rewards!"
+    },
+    "premium": {
+        "title": "Unlock Your\nFull Potential",
+        "subtitle": "Take your workouts to the next level with exclusive features",
+        "monthly": "Monthly",
+        "yearly": "Yearly",
+        "perMonth": "per month",
+        "perYear": "per year",
+        "savings": "Save 17%",
+        "features": "What you get:",
+        "startTrial": "Start Free Trial",
+        "trialInfo": "7 days free, then",
+        "terms": "By continuing, you agree to our Terms of Use",
+        "benefits": {
+            "unlimited": "Unlimited Check-ins",
+            "badges": "Exclusive Badges",
+            "stats": "Advanced Statistics",
+            "ranking": "Global Ranking",
+            "missions": "Bonus Weekly Missions",
+            "invites": "Special Invites",
+            "marketplace": "Premium Marketplace",
+            "noAds": "No Ads"
+        }
+    },
+    "points": {
+        "title": "Premium Points",
+        "subtitle": "Exchange your points for amazing rewards!",
+        "yourPoints": "Your Points",
+        "totalEarned": "Total earned",
+        "howToEarn": "How to Earn Points",
+        "rewards": "Available Rewards",
+        "locked": "Locked",
+        "info": "Points never expire! Keep training and accumulating to redeem even better rewards."
+    },
+    "profile": {
+        "title": "My Profile",
+        "progress": "My Progress",
+        "streak": "Streak",
+        "badges": "Badges",
+        "stats": "Statistics",
+        "settings": "Settings"
+    }
+}
