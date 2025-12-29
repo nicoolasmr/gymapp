@@ -1,0 +1,38 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'fitness-app/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'fitness-app/**'
+
+jobs:
+  validate:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./fitness-app
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './fitness-app/package-lock.json'
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run ESLint
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx
+
+      - name: Run Tests
+        run: npm test
