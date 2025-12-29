@@ -45,16 +45,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const navigation = [
         { name: 'Visão Geral', href: '/admin/overview', icon: '📊' },
         { name: 'Analytics', href: '/admin/analytics', icon: '📈' },
-        { name: 'Broadcast', href: '/admin/broadcast', icon: '📢' },
-        { name: 'Monitoring', href: '/admin/monitoring', icon: '🔍' },
-        { name: 'Painel Mundial', href: '/superadmin/world', icon: '🌍' },
         { name: 'Academias', href: '/admin/academies', icon: '🏋️' },
         { name: 'Usuários', href: '/admin/users', icon: '👥' },
-        { name: 'Planos', href: '/admin/plans', icon: '💳' },
-        { name: 'Financeiro', href: '/admin/finance', icon: '💰' },
-        { name: 'Regras de Notificação', href: '/admin/notification-rules', icon: '🔔' },
-        { name: 'Logs de Notificação', href: '/admin/notification-logs', icon: '📝' },
+        // MVP 0.6 Functional
+        { name: 'Moderação Reviews', href: '/admin/reviews', icon: '⭐' },
+        { name: 'Indicações', href: '/admin/referrals', icon: '🤝' },
+        { name: 'Fechamento (Payouts)', href: '/admin/payouts', icon: '💰' },
+        // MVP 0.7 Engineering
+        { name: 'Health Check', href: '/admin/health', icon: '🏥' },
+        { name: 'QA Tools', href: '/admin/qa', icon: '🧪' },
     ];
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
@@ -82,8 +83,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 key={item.name}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                                        ? 'bg-blue-700 text-white'
-                                        : 'text-blue-200 hover:bg-blue-800 hover:text-white'
+                                    ? 'bg-blue-700 text-white'
+                                    : 'text-blue-200 hover:bg-blue-800 hover:text-white'
                                     }`}
                             >
                                 <span className="text-xl">{item.icon}</span>

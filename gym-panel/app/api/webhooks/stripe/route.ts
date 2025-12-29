@@ -30,95 +30,234 @@ export async function POST(req: Request) {
     }
 
     const session = event.data.object as Stripe.Checkout.Session;
-    const invoice = event.data.object as Stripe.Invoice;
 
     try {
         switch (event.type) {
             case 'checkout.session.completed':
-                // Pagamento inicial realizado com sucesso
-                if (session.metadata?.userId) {
-                    const userId = session.metadata.userId;
-                    const planId = session.metadata.planId; // '1' (Solo) ou '2' (Familia)
+                // 1. Process Subscription Creation or Ad Payment
+                if (session.metadata?.type === 'ad_campaign') {
+                    // --- FLOW: MARKETPLACE ADS ---
+                    const campaignId = session.metadata.campaignId;
+                    console.log(`Processing Ad Campaign Payment: ${campaignId}`);
 
-                    console.log(`Processing checkout for user ${userId}, plan ${planId}`);
-
-                    // 1. Atualizar status da assinatura
-                    // (Isso já deve ser feito pelo seu backend de checkout, mas garantimos aqui)
-                    // ...
-
-                    // 2. Converter Indicação (Se houver)
-                    // O RPC 'convert_referral' verifica se o usuário foi indicado e converte
-                    const { error: referralError } = await supabase.rpc('convert_referral', {
-                        p_referred_id: userId
-                    });
-
-                    if (referralError) {
-                        console.error('Error converting referral:', referralError);
-                    } else {
-                        console.log('Referral converted successfully (if existed)');
+                    if (campaignId) {
+                        await supabase
+                            .from('ads_campaigns')
+                            .update({ status: 'active', stripe_subscription_id: session.subscription as string }) // Or subscription ID if recurring
+                            .eq('id', campaignId);
                     }
                 }
-                break;
+                else if (session.metadata?.userId) {
+                    // --- FLOW: USER SUBSCRIPTION ---
+                    const userId = session.metadata.userId;
+                    const subscriptionId = session.subscription as string;
 
-            case 'invoice.created':
-                // Nova fatura gerada (renovação mensal)
-                // Verificar se devemos aplicar desconto de indicação
-                if (invoice.customer && invoice.subscription) {
-                    // Precisamos achar o user_id baseado no customer_id do Stripe
-                    // Assumindo que guardamos o customer_id na tabela users ou memberships
-                    // Por simplificação, vamos tentar buscar na tabela memberships pelo subscription_id se possível
-                    // Ou, idealmente, o metadata do subscription tem o userId.
-
-                    // Como o invoice.created não traz metadata da subscription facilmente sem expandir,
-                    // vamos assumir que a lógica de desconto será aplicada ANTES da fatura ser finalizada.
-                    // O ideal é usar o webhook 'invoice.created' para adicionar o desconto.
-
-                    const subscriptionId = invoice.subscription as string;
-
-                    // Buscar usuário dono da subscription
-                    const { data: membership } = await supabase
+                    // Update membership status
+                    await supabase
                         .from('memberships')
-                        .select('user_id')
-                        .eq('stripe_subscription_id', subscriptionId)
-                        .single();
+                        .insert({
+                            user_id: userId,
+                            stripe_subscription_id: subscriptionId,
+                            status: 'active',
+                            plan_id: session.metadata.planId
+                        })
+                        .select(); // Ensure it exists
 
-                    if (membership) {
-                        console.log(`Applying discount for user ${membership.user_id} on invoice ${invoice.id}`);
+                    // 2. Process Referral (If code present)
+                    const referralCode = session.metadata.referralCode;
 
-                        // Chamar RPC para aplicar desconto
-                        // Essa função deve retornar o valor do desconto ou aplicá-lo via Stripe API
-                        const { data: discountAmount, error: discountError } = await supabase.rpc('apply_referral_discount', {
-                            p_user_id: membership.user_id
-                        });
+                    if (referralCode) {
+                        console.log(`Processing referral code ${referralCode} for user ${userId}`);
 
-                        if (!discountError && discountAmount > 0) {
-                            // Aplicar desconto na fatura do Stripe (Adicionar item negativo)
-                            await stripe.invoiceItems.create({
-                                customer: invoice.customer as string,
-                                invoice: invoice.id,
-                                amount: -Math.round(discountAmount * 100), // Centavos negativos
-                                currency: 'brl',
-                                description: 'Desconto de Indicação (10%)'
-                            });
-                            console.log(`Discount of R$ ${discountAmount} applied to invoice.`);
+                        // A. Find Referrer
+                        const { data: codeData } = await supabase
+                            .from('referral_codes')
+                            .select('user_id')
+                            .eq('code', referralCode)
+                            .single();
+
+                        if (codeData) {
+                            const referrerId = codeData.user_id;
+
+                            // Prevent self-referral
+                            if (referrerId !== userId) {
+                                // B. Create Referral Record
+                                await supabase
+                                    .from('referrals')
+                                    .insert({
+                                        referrer_id: referrerId,
+                                        referred_user_id: userId,
+                                        status: 'converted'
+                                    });
+
+                                // C. Calculate Reward (10% of Session Amount)
+                                // If amount_total is 10000 (R$ 100), reward is 1000 (R$ 10)
+                                const rewardAmount = Math.round((session.amount_total || 0) * 0.10);
+
+                                if (rewardAmount > 0) {
+                                    // D. Create Reward Record
+                                    const { data: reward } = await supabase
+                                        .from('referral_rewards')
+                                        .insert({
+                                            referrer_id: referrerId,
+                                            referred_user_id: userId,
+                                            amount_cents: rewardAmount,
+                                            status: 'earned'
+                                        })
+                                        .select()
+                                        .single();
+
+                                    // E. Apply Credit to Referrer's Stripe Customer
+                                    // We need to find the Referrer's Stripe Customer ID first
+                                    const { data: referrerMembership } = await supabase
+                                        .from('memberships')
+                                        .select('stripe_subscription_id') // We need customer_id actually
+                                        // Realistically, we should have stripe_customer_id in 'users' or 'memberships'
+                                        .eq('user_id', referrerId)
+                                        .single();
+
+                                    if (referrerMembership?.stripe_subscription_id) {
+                                        // Fetch sub to get customer (inefficient but works for now)
+                                        const referrerSub = await stripe.subscriptions.retrieve(referrerMembership.stripe_subscription_id);
+                                        const customerId = referrerSub.customer as string;
+
+                                        await stripe.customers.createBalanceTransaction(
+                                            customerId,
+                                            {
+                                                amount: -rewardAmount, // Negative amount = Credit
+                                                currency: 'brl',
+                                                description: `Bônus indicação: Usuário ${userId}`
+                                            }
+                                        );
+
+                                        // F. Mark as Processed
+                                        if (reward) {
+                                            await supabase
+                                                .from('referral_rewards')
+                                                .update({ status: 'processed', processed_at: new Date().toISOString() })
+                                                .eq('id', reward.id);
+                                        }
+                                        console.log(`Credit of ${rewardAmount} applied to referrer ${referrerId}`);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
                 break;
 
+            case 'invoice.payment_failed':
+                // Send push notification: Payment Failed
+                const failedInvoice = event.data.object as any; // Stripe Invoice type incomplete
+                if (failedInvoice.subscription) {
+                    const { data: membership } = await supabase
+                        .from('memberships')
+                        .select('user_id')
+                        .eq('stripe_subscription_id', failedInvoice.subscription)
+                        .single();
+
+                    if (membership) {
+                        await sendPushNotification(
+                            membership.user_id,
+                            'payment_failed',
+                            '⚠️ Pagamento Recusado',
+                            'Atualize seu método de pagamento para continuar usando o app.'
+                        );
+                    }
+                }
+                break;
+
+            case 'invoice.payment_succeeded':
+                // Send push notification: Payment Success
+                const successInvoice = event.data.object as any; // Stripe Invoice type incomplete
+
+                if (successInvoice.subscription && successInvoice.billing_reason === 'subscription_cycle') {
+                    const { data: membership } = await supabase
+                        .from('memberships')
+                        .select('user_id')
+                        .eq('stripe_subscription_id', successInvoice.subscription)
+                        .single();
+
+                    if (membership) {
+                        await sendPushNotification(
+                            membership.user_id,
+                            'payment_success',
+                            '✅ Pagamento Confirmado',
+                            'Sua assinatura foi renovada com sucesso. Bons treinos!'
+                        );
+                    }
+                }
+                break;
+
             case 'customer.subscription.deleted':
-                // Assinatura cancelada
-                const subscriptionId = event.data.object.id;
-                await supabase
-                    .from('memberships')
-                    .update({ status: 'canceled' })
-                    .eq('stripe_subscription_id', subscriptionId);
+
+                if (event.data.object.id) {
+                    await supabase
+                        .from('memberships')
+                        .update({ status: 'canceled' })
+                        .eq('stripe_subscription_id', event.data.object.id);
+                }
                 break;
         }
     } catch (error) {
         console.error('Error processing webhook:', error);
-        return new NextResponse('Error processing webhook', { status: 500 });
+        return new NextResponse('Internal Server Error', { status: 500 });
     }
 
     return new NextResponse(null, { status: 200 });
+}
+
+/**
+ * Helper: Send Push Notification
+ */
+async function sendPushNotification(
+    userId: string,
+    type: string,
+    title: string,
+    body: string
+) {
+    try {
+        const dedupKey = `user_${userId}_${type}_${new Date().toISOString().split('T')[0]}`;
+
+        // Check if already sent today
+        const { data: existing } = await supabase
+            .from('push_notifications_log')
+            .select('id')
+            .eq('dedup_key', dedupKey)
+            .single();
+
+        if (existing) {
+            console.log(`Push notification already sent: ${dedupKey}`);
+            return;
+        }
+
+        // Get user's push token
+        const { data: tokenData } = await supabase
+            .from('user_push_tokens')
+            .select('expo_push_token')
+            .eq('user_id', userId)
+            .eq('is_active', true)
+            .single();
+
+        if (!tokenData) {
+            console.log(`No push token for user ${userId}`);
+            return;
+        }
+
+        // Log notification
+        await supabase.from('push_notifications_log').insert({
+            user_id: userId,
+            notification_type: type,
+            dedup_key: dedupKey,
+            title,
+            body,
+            status: 'pending',
+        });
+
+        // Send via Expo (simplified, in production use expo-server-sdk)
+        // For now, we just log. The cron job will pick it up or we send inline.
+        console.log(`Push notification queued for user ${userId}: ${title}`);
+    } catch (error) {
+        console.error('Failed to send push notification:', error);
+    }
 }

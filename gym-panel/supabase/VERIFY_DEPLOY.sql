@@ -43,7 +43,13 @@ BEGIN
     FROM pg_tables
     WHERE schemaname = 'public' 
     AND rowsecurity = false
-    AND tablename IN ('academies', 'competitions', 'checkins', 'competition_participants', 'users');
+    AND tablename IN ('users', 'academies', 'memberships', 'checkins', 
+                      'competitions', 'competition_participants', 
+                      'referral_codes', 'referral_rewards', 'academy_reviews',
+                      'ads_campaigns', 'ads_events',
+                      'payout_periods', 'payout_runs',
+                      'user_push_tokens', 'push_notifications_log');
+
 
     IF v_rls_disabled IS NOT NULL THEN
         RAISE WARNING '⚠️ ATENÇÃO: RLS Desativado nas tabelas: %', v_rls_disabled;

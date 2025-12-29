@@ -1,82 +1,110 @@
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 import { Platform } from 'react-native';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
 
-let registerForPushNotificationsAsync: (userId: string) => Promise<string | undefined>;
-let savePushToken: (userId: string, token: string) => Promise<void>;
+// Configure notification behavior
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+    }),
+});
 
-// Web-safe notification service
-if (Platform.OS === 'web') {
-    // Mock implementation for web
-    registerForPushNotificationsAsync = async (userId: string) => {
-        console.log('Push notifications are not supported on web');
-        return undefined;
-    };
-
-    savePushToken = async (userId: string, token: string) => {
-        console.log('Push notifications are not supported on web');
-    };
-} else {
-    // Native implementation
-    const Notifications = require('expo-notifications');
-    const Device = require('expo-device');
-    const Constants = require('expo-constants');
-
-    Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-            shouldShowAlert: true,
-            shouldPlaySound: true,
-            shouldSetBadge: false,
-        }),
-    });
-
-    registerForPushNotificationsAsync = async (userId: string) => {
-        let token;
-
-        if (Platform.OS === 'android') {
-            await Notifications.setNotificationChannelAsync('default', {
-                name: 'default',
-                importance: Notifications.AndroidImportance.MAX,
-                vibrationPattern: [0, 250, 250, 250],
-                lightColor: '#FF231F7C',
-            });
+export const notificationService = {
+    /**
+     * Request permission and register push token
+     */
+    async registerForPushNotifications(userId: string): Promise<string | null> {
+        if (!Device.isDevice) {
+            console.warn('Push notifications only work on physical devices');
+            return null;
         }
 
-        if (Device.isDevice) {
+        try {
+            // 1. Check/Request Permission
             const { status: existingStatus } = await Notifications.getPermissionsAsync();
             let finalStatus = existingStatus;
+
             if (existingStatus !== 'granted') {
                 const { status } = await Notifications.requestPermissionsAsync();
                 finalStatus = status;
             }
+
             if (finalStatus !== 'granted') {
-                console.log('Failed to get push token for push notification!');
-                return;
+                console.warn('Push notification permission denied');
+                return null;
             }
-            token = (await Notifications.getExpoPushTokenAsync({
-                projectId: Constants.expoConfig?.extra?.eas?.projectId,
-            })).data;
 
-            if (token) {
-                await savePushToken(userId, token);
+            // 2. Get Expo Push Token
+            const tokenData = await Notifications.getExpoPushTokenAsync({
+                projectId: process.env.EXPO_PUBLIC_PROJECT_ID || 'your-project-id', // Configure in app.json
+            });
+
+            const token = tokenData.data;
+
+            // 3. Save to Backend
+            const deviceInfo = {
+                platform: Platform.OS,
+                model: Device.modelName,
+                osVersion: Device.osVersion,
+            };
+
+            const { error } = await supabase.rpc('register_push_token', {
+                p_user_id: userId,
+                p_token: token,
+                p_device_info: deviceInfo,
+            });
+
+            if (error) {
+                console.error('Failed to register push token:', error);
+                return null;
             }
-        } else {
-            console.log('Must use physical device for Push Notifications');
+
+            console.log('Push token registered successfully:', token);
+            return token;
+        } catch (error) {
+            console.error('Error registering for push notifications:', error);
+            return null;
         }
+    },
 
-        return token;
-    };
+    /**
+     * Mark notification as opened (for analytics)
+     */
+    async markAsOpened(notificationId: string) {
+        try {
+            await supabase
+                .from('push_notifications_log')
+                .update({ status: 'opened', opened_at: new Date().toISOString() })
+                .eq('id', notificationId);
+        } catch (error) {
+            console.error('Failed to mark notification as opened:', error);
+        }
+    },
 
-    savePushToken = async (userId: string, token: string) => {
-        const { error } = await supabase
-            .from('users')
-            .update({ push_token: token })
-            .eq('id', userId);
+    /**
+     * Setup notification listeners
+     */
+    setupListeners() {
+        // Listener for when notification is received while app is foregrounded
+        const receivedListener = Notifications.addNotificationReceivedListener(notification => {
+            console.log('Notification received:', notification);
+        });
 
-        if (error) console.error('Error saving push token:', error);
-    };
-}
+        // Listener for when user taps notification
+        const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+            console.log('Notification tapped:', response);
+            const notificationId = response.notification.request.content.data?.notificationId;
+            if (notificationId) {
+                this.markAsOpened(notificationId);
+            }
+        });
 
-export const notificationService = {
-    registerForPushNotificationsAsync,
-    savePushToken
+        return () => {
+            Notifications.removeNotificationSubscription(receivedListener);
+            Notifications.removeNotificationSubscription(responseListener);
+        };
+    },
 };

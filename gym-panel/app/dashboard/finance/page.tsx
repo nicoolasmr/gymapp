@@ -137,8 +137,8 @@ export default function FinancePage() {
                     <div className="flex items-center gap-3 mt-2">
                         <p className="text-gray-500">Gestão de repasses: <span className="font-semibold text-gray-700">{academy.name}</span></p>
                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${academy.modality === 'crossfit_box' ? 'bg-orange-100 text-orange-700' :
-                                academy.modality === 'studio' ? 'bg-purple-100 text-purple-700' :
-                                    'bg-blue-100 text-blue-700'
+                            academy.modality === 'studio' ? 'bg-purple-100 text-purple-700' :
+                                'bg-blue-100 text-blue-700'
                             }`}>
                             {academy.modality === 'gym_standard' ? 'Academia' :
                                 academy.modality === 'crossfit_box' ? 'CrossFit' :
@@ -153,6 +153,48 @@ export default function FinancePage() {
                     ⬅️ Voltar ao Painel
                 </a>
             </div>
+
+            {/* Stripe Connect Onboarding Card */}
+            {!academy.stripe_connect_account_id && (
+                <div className="mb-6 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 p-6 shadow-xl text-white">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-xl font-bold mb-2">🏦 Receba Pagamentos Automáticos</h3>
+                            <p className="text-purple-100 text-sm">
+                                Conecte sua conta bancária para receber repasses automaticamente via Stripe.
+                            </p>
+                        </div>
+                        <button
+                            onClick={async () => {
+                                const res = await fetch('/api/connect/onboard', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ academyId: academy.id }),
+                                });
+                                const data = await res.json();
+                                if (data.url) window.location.href = data.url;
+                            }}
+                            className="px-6 py-3 bg-white text-purple-600 font-bold rounded-xl hover:bg-purple-50 transition-all shadow-lg"
+                        >
+                            Conectar Agora
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {academy.stripe_connect_account_id && academy.connect_onboarding_status !== 'active' && (
+                <div className="mb-6 rounded-2xl bg-yellow-50 border border-yellow-200 p-6">
+                    <div className="flex items-center gap-3">
+                        <span className="text-2xl">⏳</span>
+                        <div>
+                            <h3 className="font-bold text-yellow-900">Onboarding Pendente</h3>
+                            <p className="text-sm text-yellow-700">
+                                Complete o cadastro da sua conta bancária para ativar pagamentos automáticos.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Hero Card - Gradient */}
             <div className="mb-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-8 shadow-xl text-white relative overflow-hidden">
@@ -221,8 +263,8 @@ export default function FinancePage() {
                             <li key={idx} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-default">
                                 <div className="flex items-center gap-3">
                                     <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${idx === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                            idx === 1 ? 'bg-gray-100 text-gray-700' :
-                                                idx === 2 ? 'bg-orange-100 text-orange-800' : 'bg-blue-50 text-blue-600'
+                                        idx === 1 ? 'bg-gray-100 text-gray-700' :
+                                            idx === 2 ? 'bg-orange-100 text-orange-800' : 'bg-blue-50 text-blue-600'
                                         }`}>
                                         {idx + 1}
                                     </div>
